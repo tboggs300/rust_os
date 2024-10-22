@@ -11,8 +11,19 @@ use core::panic::PanicInfo;
 pub extern "C" fn _start() -> ! {
     println!("Hello World{}", "!");
 
+    rust_os::init();
+
+    fn stack_overflow() {
+        stack_overflow();
+    }
+
+    // uncomment to trigger a stack overflow
+    // stack_overflow();
+
     #[cfg(test)]
     test_main();
+
+    println!("It did not crash!");
 
     loop {}
 }
