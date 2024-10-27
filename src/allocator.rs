@@ -8,10 +8,39 @@ use x86_64::{
     VirtAddr,
 };
 
+use bump::BumpAllocator;
+
+#[global_allocator]
+static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
+
 pub const HEAP_START: usize = 0x_444_444_000;
 pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB
+                                         //
+pub mod bump;
 
 pub struct Dummy;
+pub struct Locked<A> {
+    inner: spin::Mutex<A>,
+}
+
+impl<A> Locked<A> {
+    pub const fn new(inner: A) -> Self {
+        Locked {
+            inner: spin::Mutex::new(inner),
+        }
+    }
+
+    pub fn lock(&self) -> spin::MutexGuard<A> {
+        self.inner.lock()
+    }
+}
+
+/// Align the given address `addr` upwards to alignment `align`.
+///
+/// Requires that `align` is a power of two.
+fn align_up(addr: usize, align: usize) -> usize {
+    (addr + align - 1) & !(align - 1)
+}
 
 unsafe impl GlobalAlloc for Dummy {
     unsafe fn alloc(&self, _layout: Layout) -> *mut u8 {
@@ -23,9 +52,6 @@ unsafe impl GlobalAlloc for Dummy {
     }
 
 }
-
-#[global_allocator]
-static ALLOCATOR: LockedHeap = LockedHeap::empty();
 
 pub fn init_heap(
     mapper: &mut impl Mapper<Size4KiB>,
