@@ -15,7 +15,7 @@ entry_point!(kernel_main);
 
 fn kernel_main(_boot_info: &'static BootInfo) -> ! {
     use rust_os::memory::{self, BootInfoFrameAllocator};
-    use x86_64::{structures::paging::Page, VirtAddr};
+    use x86_64::VirtAddr;
 
     println!("Hello World{}", "!");
     rust_os::init();
